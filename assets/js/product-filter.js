@@ -23,7 +23,9 @@ $(document).ready(function () {
     searchProducts();
   });
 
+  // Listen for clicks on virtual keyboard buttons inside #jq-keyboard
   $("body").on("click", "#jq-keyboard button", function (e) {
+    // Only trigger search if the search input is currently focused
     if ($("#search").is(":focus")) {
       searchProducts();
     }

@@ -264,6 +264,35 @@ app.post("/product/sku", function (req, res) {
 });
 
 /**
+ * POST endpoint: Find a product by product name code.
+ *
+ * @param {Object} req request object with product name in the body.
+ * @param {Object} res response object.
+ * @returns {void}
+ */
+
+app.post("/product/name", function (req, res) {
+    console.log("Search Product name API")
+    let name = validator.escape(req.body.productName);
+    inventoryDB.find(
+        {
+            // Build a case-insensitive regex to match product names containing the provided substring
+            name: { $regex: new RegExp(name, "i") },
+        },
+        function (err, doc) {
+            if (err) {
+                console.error(err);
+                res.status(500).json({
+                    error: "Internal Server Error",
+                    message: "An unexpected error occurred.",
+                });
+            } else {
+                res.send(doc);
+            }
+        },
+    );
+});
+/**
  * Decrement inventory quantities based on a list of products in a transaction.
  *
  * @param {Array} products - List of products in the transaction.

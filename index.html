@@ -50,7 +50,7 @@
                             </button>
                         </div>
                         <button id="viewRefOrders" data-toggle="modal" data-target="#holdOrdersModal" type="button" class="btn btn-info waves-effect waves-light">
-                            <span class="btn-label"><i class="fa fa-shopping-basket"></i> </span> Open Tabs
+                            <span class="btn-label"><i class="fa fa-shopping-basket"></i> </span> Hold-On Orders
                         </button>
                         <button id="viewCustomerOrders" data-toggle="modal" data-target="#customerModal" type="button" onclick="$(this).getCustomerOrders()" class="btn btn-info waves-effect waves-light">
                             <span class="btn-label"><i class="fa fa-shopping-cart"></i></span> Orders
@@ -211,14 +211,14 @@
                                             <div class="input-group">
                                                 <input type="text" required id="skuCode" name="skuCode" class="form-control number-input" placeholder="Scan barcode or type the number then hit enter" aria-label="barcode" aria-describedby="basic-addon2">
                                                 <span class="input-group-btn">
-                                                    <button type="submit" class="btn btn-default search-barcode-btn"><i class="glyphicon glyphicon-ok"></i></button>
+                                                    <button type="submit" class="btn btn-default search-barcode-btn"><i class="glyphicon glyphicon-search"></i></button>
                                                 </span>
                                             </div>
                                         </form>
                                     </div>
                                 </div>
                                 <div class="row p-t-10" id="cartTable">
-                                    <div class="card-box">
+                                    <div class="card-box" style="border-color: green;">
                                         <div class="card-title">
                                             <div class="row">
                                                 <div class="col-md-1"><strong>#</strong></div>
@@ -233,8 +233,8 @@
                                     </div>
                                 </div>
                             </div>
-                            <hr>
                             <div class="m-t-5">
+                            
                                 <div class="row">
                                     <div class="col-md-3">Total Item(s)</div>
                                     <div class="col-md-3">: <span id="total">0</span>
@@ -251,6 +251,7 @@
                                     </div>
                                 </div>
                             </div>
+                             <hr/>
                             <div class="button-list pull-right">
                                 <button onclick="$(this).submitDueOrder(3);" type="button" class="btn btn-info waves-effect waves-light">
                                     <i class="fa fa-print"></i>
@@ -265,7 +266,9 @@
                                     <span class="btn-label"><i class="fa fa-money"></i></span>Pay
                                 </button>
                             </div>
-                            <hr>
+                            <br>
+                            <br>
+                            <hr/>
                         </div>
                     </div>
                     <div class="col-md-6">
@@ -380,7 +383,7 @@
                                 <br>
                                 <div class="input-group">
                                     <span class="input-group-addon" id="basic-addon3">Payment <span id="payment_curr"></span> </span>
-                                    <input type="text" placeholder="0.0" class="form-control" id="paymentText" aria-describedby="basic-addon3" readonly>
+                                    <input type="text" placeholder="0.0" class="form-control" id="paymentText" aria-describedby="basic-addon3">
                                     <input type="hidden" class="form-control" id="payment" aria-describedby="basic-addon3">
                                 </div>
                                 <hr>
@@ -433,7 +436,7 @@
                                                 <button data-val="0" data-isdue="false" class="btn btn-success btn-lg btn-block keypad-btn">0</button>
                                             </div>
                                             <div class="col-md-3">
-                                                <button data-val="." data-isdue="false" class="btn btn-warning btn-lg btn-block">.</button>
+                                                <button data-val="point" data-isdue="false" class="btn btn-warning btn-lg btn-block keypad-btn">.</button>
                                             </div>
                                             <div class="col-md-3"></div>
                                         </div>
@@ -497,7 +500,7 @@
             </div>
         </div>
         <div id="newProduct" class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-sm">
+            <div class="modal-dialog modal-lg">
                 <div class="modal-content">
                     <div class="modal-header">
                         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
@@ -518,15 +521,23 @@
                                 <input type="text" required="required" name="name" parsley-trigger="change" placeholder="Enter a product name" class="form-control" id="productName">
                             </div>
                             <div class="form-group">
-                                <label for="barcode">BarCode</label>
+                                <label for="barcode">BarCode:</label>
                                 <input type="text" required="required" name="barcode" parsley-trigger="change" placeholder="Enter product barcode" class="form-control number-input" id="barcode">
                             </div>
-                            <div class="form-group">
-                                <label for="product_price">Price</label>
-                                <input type="text" required="required" name="price" placeholder="Price" class="form-control number-input" id="product_price">
+                             <div class="form-group">
+                                <label for="product_price">Cost Price:</label>
+                                <input type="text" required="required" name="cost_price" placeholder="Cost Price" class="form-control number-input" id="cost_price">
+                            </div>
+                             <div class="form-group">
+                                <label for="product_price">Profit Margin:</label>
+                                <input type="text" required="required" name="profit_margin" placeholder="Profit Margin" class="form-control number-input" id="profit_margin">
                             </div>
                             <div class="form-group">
-                                <label for="expirationDate">Expiry Date</label>
+                                <label for="price">Price:</label>
+                                <input type="text" required="required" name="price" placeholder="Sale Price" class="form-control number-input" id="product_price">
+                            </div>
+                            <div class="form-group">
+                                <label for="expirationDate">Expiry Date:</label>
                                 <input type="text" name="expirationDate" parsley-trigger="change" placeholder="dd/mm/yyyy" class="form-control" id="expirationDate" readonly>
                             </div>
                             <div class="form-group">
@@ -589,9 +600,10 @@
                                     <th>Item</th>
                                     <th>Name</th>
                                     <th>Price</th>
-                                    <th>Stock</th>
+                                    <th>Quantity</th>
                                     <th>Expiry Date</th>
                                     <th>Category</th>
+                                    <th>Stock</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -844,6 +856,17 @@
                                             Vat</label>
                                         </div>
                                         <div class="form-group">
+                                            <label for="userName">Profit Margin</label>
+                                            <div class="pull-left">
+                                                <div class="col-md-6">
+                                                    <div class="input-group" style="width:130%">
+                                                        <input type="number" min="0" max="100" required="required" name="percentage" class="form-control" id="percentage">
+                                                        <span class="input-group-addon">%</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
                                             <label for="userName"><span id="rmv_logo" class="btn btn-xs btn-warning">Remove</span> Logo </label>
                                             <div id="current_logo"></div>
                                             <input type="file" name="imagename" id="logoname" accept=".jpg,.jpeg,.png,.webp">
@@ -868,6 +891,7 @@
             </div>
         </div>
     </div>
+
     <script src="assets/dist/js/bundle.min.js"></script>
 </body>
 

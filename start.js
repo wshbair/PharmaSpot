@@ -4,6 +4,7 @@ const setupEvents = require("./installers/setupEvents");
 if (setupEvents.handleSquirrelEvent()) {
     return;
 }
+
 const server = require('./server');
 const { app, BrowserWindow, ipcMain, screen} = require("electron");
 const path = require("path");
@@ -33,6 +34,10 @@ function createWindow() {
         },
     });
     menuController.initializeMainWindow(mainWindow); 
+    require("@electron/remote/main").enable(mainWindow.webContents);
+    if (typeof mainWindow.webContents.setMaxListeners === "function") {
+        mainWindow.webContents.setMaxListeners(20);
+    }
     mainWindow.maximize();
     mainWindow.show();
 
@@ -44,10 +49,8 @@ function createWindow() {
     
 }
 
-app.on("browser-window-created", (_, window) => {
-    require("@electron/remote/main").enable(window.webContents);
-});
 
+app.commandLine.appendSwitch('disable-features', 'AutofillServerCommunication');
 app.whenReady().then(() => {
     createWindow();
 });

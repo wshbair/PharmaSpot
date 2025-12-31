@@ -24,7 +24,7 @@ $(document).ready(function () {
    */
   $.fn.digits = function () {
     let paymentAmount = $("#payment").val();
-    $("#paymentText").val(utils.moneyFormat(paymentAmount));
+    $("#paymentText").val(parseFloat(paymentAmount).toFixed(2));
     $("#payment").val(paymentAmount + ".");
     $(this).calculateChange();
   };
@@ -35,7 +35,9 @@ $(document).ready(function () {
   $.fn.calculateChange = function () {
     var payablePrice = $("#payablePrice").val().replace(",", "");
     var payment = $("#payment").val().replace(",", "");
+
     var change = payablePrice - payment;
+    console.log(change)
     if (change <= 0) {
       $("#change").text(utils.moneyFormat(Math.abs(change.toFixed(2))));
       $("#confirmPayment").show();
@@ -45,9 +47,10 @@ $(document).ready(function () {
     }
   };
 
-  var $keypadBtn = $(".keypad-btn").on("click", function () {
+  $(".keypad-btn").on("click", function () {
     const key = $(this).data("val");
     const isdue = $(this).data("isdue");
+    console.log("Key: " + key)
     switch(key)
     {
     case "del" : { 
@@ -77,9 +80,9 @@ $(document).ready(function () {
        
     };break;
 
-  case "point": {
-    $(this).digits()
-    };break;
+    case "point": {
+      $(this).digits()
+      };break;
 
    default: $(this).keypadBtnPressed(key, isdue); break;
   }

@@ -431,9 +431,18 @@ if (auth == undefined) {
             $("#basic-addon2").append(
               $("<i>", { class: "glyphicon glyphicon-ok" }),
             );
-          } else if (expired) {
+          }
+          else if(product == "")
+          {
+            notiflix.Report.warning(
+              "Product Not Found!",
+              "<b>" + $("#skuCode").val() + "</b> is not a valid barcode!",
+              "Ok",
+            );
+          }
+          else if (expired) {
             notiflix.Report.failure(
-              "Expired!",
+              "This is Expired!",
               `${product.name} is expired`,
               "Ok",
             );
@@ -479,9 +488,66 @@ if (auth == undefined) {
       });
     }
 
+    function productNameSearch(e) {
+      e.preventDefault();
+      console.log("Call function")
+      let searchNameIcon = $(".search-name-btn").html();
+      $(".search-name-btn").empty();
+      $(".search-name-btn").append(
+        $("<i>", { class: "fa fa-spinner fa-spin" }),
+      );
+
+      let req = {
+        productName: $("#searchProductNameValue").val(),
+      };
+      $.ajax({
+        url: api + "inventory/product/name",
+        type: "POST",
+        data: JSON.stringify(req),
+        contentType: "application/json; charset=utf-8",
+        cache: false,
+        processData: false,
+        success: function (product) {
+        console.log(product)
+        $(".search-name-btn").html(searchNameIcon);
+        $('#productNameList').empty()
+        product.forEach(u => {
+          $('#productNameList').append(
+            `<option value="${u._id}" label="${u.name}">`
+          )
+        });
+        },
+        error: function (err) {
+          console.log(err)
+          // if (err.status === 422) {
+          //   $(this).showValidationError(data);
+          //   $("#basic-addon2").append(
+          //     $("<i>", { class: "glyphicon glyphicon-remove" }),
+          //   );
+          // } else if (err.status === 404) {
+          //   $("#basic-addon2").empty();
+          //   $("#basic-addon2").append(
+          //     $("<i>", { class: "glyphicon glyphicon-remove" }),
+          //   );
+          // } else {
+          //   $(this).showServerError();
+          //   $("#basic-addon2").empty();
+          //   $("#basic-addon2").append(
+          //     $("<i>", { class: "glyphicon glyphicon-warning-sign" }),
+          //   );
+          // }
+        },
+      });
+    }
+
     $("#searchBarCode").on("submit", function (e) {
       barcodeSearch(e);
     });
+    
+    $("#searchProductNameValue").on("keyup change", function (e) {
+      productNameSearch(e);
+    });
+
 
     $("body").on("click", "#jq-keyboard button", function (e) {
       let pressed = $(this)[0].className.split(" ");
@@ -572,7 +638,6 @@ if (auth == undefined) {
                 $("<input>", {
                   class: "form-control",
                   type: "text",
-                  readonly: "",
                   value: data.quantity,
                   min: "1",
                   onInput: "$(this).qtInput(" + index + ")",
@@ -612,10 +677,10 @@ if (auth == undefined) {
       let product = allProducts.filter(function (selected) {
         return selected._id == parseInt(item.id);
       });
-
+     
       if (product[0].stock == 1) {
         if (item.quantity < product[0].quantity) {
-          item.quantity = parseInt(item.quantity) + 1;
+          item.quantity = item.quantity + 0.5;
           $(this).renderTable(cart);
         } else {
           notiflix.Report.info(
@@ -625,15 +690,15 @@ if (auth == undefined) {
           );
         }
       } else {
-        item.quantity = parseInt(item.quantity) + 1;
+        item.quantity = item.quantity + 0.5;
         $(this).renderTable(cart);
       }
     };
 
     $.fn.qtDecrement = function (i) {
-      if (item.quantity > 1) {
+      if (item.quantity > 0.5) {
         item = cart[i];
-        item.quantity = parseInt(item.quantity) - 1;
+        item.quantity = (item.quantity) - 0.5;
         $(this).renderTable(cart);
       }
     };
@@ -702,7 +767,7 @@ if (auth == undefined) {
 
     $.fn.submitDueOrder = function (status) {
       let items = "";
-      let payment = 0;
+      let payment = 0.0;
       paymentType = $('.list-group-item.active').data('payment-type');
       cart.forEach((item) => {
     items += `<tr><td>${DOMPurify.sanitize(item.product_name)}</td><td>${
@@ -1481,6 +1546,13 @@ if (auth == undefined) {
       loadCategoryList();
     });
 
+    $("#profit_margin").off("input change").on("input change", function () {
+        var price = parseFloat($("#cost_price").val()) || 0;
+        var margin = parseFloat($("#profit_margin").val()) || 0;
+        var salePrice = price + (price * margin / 100);
+        $("#product_price").val(salePrice.toFixed(2));
+      });
+
     function loadUserList() {
       let counter = 0;
       let user_list = "";
@@ -1620,6 +1692,7 @@ if (auth == undefined) {
             </td>
             <td>${product.expirationDate}</td>
             <td>${category.length > 0 ? category[0].name : ""}</td>
+            <td>${product.stock == 1 ? "Yes" : "No"}</td>
             <td class="nobr"><span class="btn-group"><button onClick="$(this).editProduct(${index})" class="btn btn-warning btn-sm"><i class="fa fa-edit"></i></button><button onClick="$(this).deleteProduct(${
               product._id
             })" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button></span></td></tr>`;
