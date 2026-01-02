@@ -59,9 +59,6 @@
                 </div>
                 <div class="col-md-6">
                     <div class="button-list m-t-15">
-                        <button id="settings" data-toggle="modal" data-target="#settingsModal" type="button" class="btn btn-success waves-effect waves-light p_five">
-                            <i class="glyphicon glyphicon-cog"></i>
-                        </button>
                         <button id="transactions" type="button" class="btn btn-success waves-effect waves-light p_three">
                             <span class="btn-label"><i class="  glyphicon glyphicon-credit-card"></i> </span>
                             Transactions
@@ -69,6 +66,10 @@
                         <button id="pointofsale" type="button" class="btn btn-success waves-effect waves-light">
                             <span class="btn-label"><i class="  glyphicon glyphicon-shopping-cart"></i> </span> Point of
                             Sale
+                        </button>
+                         <button id="settings" data-toggle="modal" data-target="#settingsModal" type="button" class="btn btn-success waves-effect waves-light p_five">
+                            <span class="btn-label"><i class="  glyphicon glyphicon-cog"></i> </span>
+                            Settings
                         </button>
                         <div class="btn-group p_four">
                             <button id="usersModal" data-toggle="modal" data-target="#Users" type="button" class="btn btn-success waves-effect waves-light">
@@ -268,11 +269,12 @@
                             </div>
                             <br>
                             <br>
-                            <hr/>
                         </div>
                     </div>
                     <div class="col-md-6">
+
                         <div class="card-box">
+                             <h5>Products List</h5>
                             <div class="row">
                                 <div class="col-md-6">
                                     <input type="text" id="search" class="form-control" placeholder="Search product by name or sku">
@@ -282,7 +284,7 @@
                                     </select>
                                 </div>
                             </div>
-                            <hr>
+                            <br>
                             <div class="row" id="parent">
                             </div>
                         </div>
@@ -499,12 +501,13 @@
                 </div>
             </div>
         </div>
+        <!-- Add or modify product modal -->
         <div id="newProduct" class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
                     <div class="modal-header">
                         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-                        <h4 class="modal-title" id="mySmallModalLabel">Product
+                        <h4 class="modal-title" id="mySmallModalLabel">Add/Modify Product
                         </h4>
                     </div>
                     <div class="modal-body">
@@ -512,57 +515,69 @@
                             <input type="hidden" name="id" id="product_id">
                             <input type="hidden" name="img" id="img">
                             <input type="hidden" name="remove" id="remove_img">
-                            <div class="form-group">
-                                <label for="category">Category</label>
-                                <select name="category" class="form-control" id="category"></select>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="category">Category</label>
+                                        <select name="category" class="form-control" id="category"></select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="barcode">BarCode:</label>
+                                        <input type="text" required="required" name="barcode" parsley-trigger="change" placeholder="Enter product barcode" class="form-control number-input" id="barcode">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="product_price">Cost Price:</label>
+                                        <input type="text" required="required" name="cost_price" placeholder="Cost Price" class="form-control number-input" id="cost_price">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="expirationDate">Expiry Date:</label>
+                                        <input type="text" name="expirationDate" parsley-trigger="change" placeholder="dd/mm/yyyy" class="form-control" id="expirationDate" readonly>
+                                    </div>
+                                     <div class="form-group">
+                                        <label for="quantity">Minimum Stock</label>
+                                        <input type="number" name="minStock" placeholder="Minimum Stock" class="form-control" id="minStock" min="1" value="1">
+                                    </div>
+                                     <div class="form-group">
+                                        <label><input type="checkbox" name="stock" id="stock">&nbsp;Disable stock check </label>
+                                    </div>
+                                    <input type="submit" id="submitProduct" class="btn btn-primary btn-block waves-effect waves-light">
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="productName">Product Name</label>
+                                        <input type="text" required="required" name="name" parsley-trigger="change" placeholder="Enter a product name" class="form-control" id="productName">
+                                    </div>
+                                     <div class="pull-left">
+                                             <label for="quantity">Profit Margin:</label>
+                                            <div class="input-group">
+                                                <input type="text" required="required" name="profit_margin" placeholder="Profit Margin" class="form-control number-input" id="profit_margin">
+                                                <span class="input-group-addon">%</span>
+                                            </div>
+                                        </div>
+                                    <div class="form-group">
+                                        <label for="price">Price:</label>
+                                        <input type="text" required="required" name="price" placeholder="Sale Price" class="form-control number-input" id="product_price">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="quantity">Quantity</label>
+                                        <input type="text" name="quantity" placeholder="Available quantity" class="form-control" id="quantity" min="0">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="imagename"><span id="rmv_img" class="btn btn-xs btn-warning">Remove</span>
+                                        Picture </label>
+                                        <div id="current_img"></div>
+                                        <input type="file" name="imagename" id="imagename">
+                                    </div>
+                                    
+                                </div>
                             </div>
-                            <div class="form-group">
-                                <label for="productName">Product Name</label>
-                                <input type="text" required="required" name="name" parsley-trigger="change" placeholder="Enter a product name" class="form-control" id="productName">
-                            </div>
-                            <div class="form-group">
-                                <label for="barcode">BarCode:</label>
-                                <input type="text" required="required" name="barcode" parsley-trigger="change" placeholder="Enter product barcode" class="form-control number-input" id="barcode">
-                            </div>
-                             <div class="form-group">
-                                <label for="product_price">Cost Price:</label>
-                                <input type="text" required="required" name="cost_price" placeholder="Cost Price" class="form-control number-input" id="cost_price">
-                            </div>
-                             <div class="form-group">
-                                <label for="product_price">Profit Margin:</label>
-                                <input type="text" required="required" name="profit_margin" placeholder="Profit Margin" class="form-control number-input" id="profit_margin">
-                            </div>
-                            <div class="form-group">
-                                <label for="price">Price:</label>
-                                <input type="text" required="required" name="price" placeholder="Sale Price" class="form-control number-input" id="product_price">
-                            </div>
-                            <div class="form-group">
-                                <label for="expirationDate">Expiry Date:</label>
-                                <input type="text" name="expirationDate" parsley-trigger="change" placeholder="dd/mm/yyyy" class="form-control" id="expirationDate" readonly>
-                            </div>
-                            <div class="form-group">
-                                <label for="quantity">Stock</label>
-                                <input type="number" name="quantity" placeholder="Available stock" class="form-control" id="quantity" min="0">
-                            </div>
-                            <div class="form-group">
-                                <label for="quantity">Minimum Stock</label>
-                                <input type="number" name="minStock" placeholder="Minimum Stock" class="form-control" id="minStock" min="1">
-                            </div>
-                            <div class="form-group">
-                                <label><input type="checkbox" name="stock" id="stock"> Disable stock check </label>
-                            </div>
-                            <div class="form-group">
-                                <label for="imagename"><span id="rmv_img" class="btn btn-xs btn-warning">Remove</span>
-                                Picture </label>
-                                <div id="current_img"></div>
-                                <input type="file" name="imagename" id="imagename">
-                            </div>
-                            <input type="submit" id="submitProduct" class="btn btn-primary btn-block waves-effect waves-light">
                         </form>
+                        
                     </div>
                 </div>
             </div>
         </div>
+
         <div id="newCategory" class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-md">
                 <div class="modal-content">
@@ -597,13 +612,10 @@
                             <thead>
                                 <tr>
                                     <th>Barcode</th>
-                                    <th>Item</th>
                                     <th>Name</th>
                                     <th>Price</th>
-                                    <th>Quantity</th>
-                                    <th>Expiry Date</th>
+                                    <th>Qty</th>
                                     <th>Category</th>
-                                    <th>Stock</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -766,7 +778,7 @@
             </div>
         </div>
         <div id="settingsModal" class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-md">
+            <div class="modal-dialog modal-lg">
                 <div class="modal-content">
                     <div class="modal-header">
                         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
@@ -776,36 +788,39 @@
                     <div class="modal-body">
                         <div class="container">
                             <div class="row">
-                                <div class="form-group">
-                                    <label for="app">Application</label>
-                                    <select name="app" id="app" class="form-control">
-                                        <option value="Standalone Point of Sale">Standalone Point of Sale</option>
-                                        <option value="Network Point of Sale Terminal">Network Point of Sale Terminal</option>
-                                        <option value="Network Point of Sale Server">Network Point of Sale Server</option>
-                                    </select>
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label for="app">Application</label>
+                                        <select name="app" id="app" class="form-control">
+                                            <option value="Standalone Point of Sale">Standalone Point of Sale</option>
+                                            <option value="Network Point of Sale Terminal">Network Point of Sale Terminal</option>
+                                            <option value="Network Point of Sale Server">Network Point of Sale Server</option>
+                                        </select>
+                                    </div>
+                                    <form id="net_settings_form">
+                                        <div class="form-group">
+                                            <label for="ip">Server IP Address*</label>
+                                            <input type="text" required="required" placeholder="Enter the IP address of the admin computer." name="ip" class="form-control" id="ip">
+                                        </div>
+                                        <div class="col-md-5">
+                                            <div class="form-group">
+                                                <label for="till">Till Number*</label>
+                                                <input type="text" required="required" placeholder="Enter a number" name="till" class="form-control" id="till">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-7">
+                                            <div class="form-group">
+                                                <label for="mac">Hardware Identification Number </label>
+                                                <input type="text" required="required" name="mac" class="form-control" id="mac" readonly="readonly">
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <input id="save_settings" type="submit" class="btn btn-success btn-block waves-effect waves-light" value="Save Settings">
+                                        </div>
+                                    </form>
                                 </div>
-                                <form id="net_settings_form">
-                                    <div class="form-group">
-                                        <label for="ip">Server IP Address*</label>
-                                        <input type="text" required="required" placeholder="Enter the IP address of the admin computer." name="ip" class="form-control" id="ip">
-                                    </div>
-                                    <div class="col-md-5">
-                                        <div class="form-group">
-                                            <label for="till">Till Number*</label>
-                                            <input type="text" required="required" placeholder="Enter a number" name="till" class="form-control" id="till">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-7">
-                                        <div class="form-group">
-                                            <label for="mac">Hardware Identification Number </label>
-                                            <input type="text" required="required" name="mac" class="form-control" id="mac" readonly="readonly">
-                                        </div>
-                                    </div>
-                                    <div class="form-group">
-                                        <input id="save_settings" type="submit" class="btn btn-success btn-block waves-effect waves-light" value="Save Settings">
-                                    </div>
-                                </form>
                             </div>
+
                             <form id="settings_form" encType="multipart/form-data">
                                 <input type="hidden" name="id" id="settings_id">
                                 <input type="hidden" name="img" id="logo_img">
@@ -821,10 +836,7 @@
                                             <label for="userName">Address Line 1</label>
                                             <input type="text" required="required" name="address_one" class="form-control" id="address_one" placeholder="123 Main Street, Building#">
                                         </div>
-                                        <div class="form-group">
-                                            <label for="userName">Address Line 2</label>
-                                            <input type="text" required="required" name="address_two" class="form-control" id="address_two" placeholder="City, Country">
-                                        </div>
+                                       
                                         <div class="form-group">
                                             <label for="userName">Contact Number</label>
                                             <input type="tel" name="contact" class="form-control" id="contact" placeholder="0800 111 000">
@@ -833,6 +845,11 @@
                                             <label for="userName">Vat Number</label>
                                             <input type="text" name="tax" parsley-trigger="change" class="form-control number-input" id="tax">
                                         </div>
+                                         <div class="form-group">
+                                            <label for="userName">Receipt Footer</label>
+                                            <textarea name="footer" class="form-control" id="footer"></textarea>
+                                        </div>
+                                       
                                     </div>
                                     <div class="col-md-6">
                                         <div class="form-group">
@@ -840,51 +857,52 @@
                                             <input type="text" required="required" name="symbol" class="form-control" id="symbol" minlength="1" maxlength="3" placeholder="USD">
                                         </div>
                                         <div class="form-group">
+                                            <label for="userName">Address Line 2</label>
+                                            <input type="text" required="required" name="address_two" class="form-control" id="address_two" placeholder="City, Country">
+                                        </div>
+
+                                        <div class="form-group">
                                             <label for="userName">Vat Percentage</label>
-                                            <div class="pull-left">
-                                                <div class="col-md-6">
-                                                    <div class="input-group" style="width:130%">
+                                            <div class="form-group">
+                                                
+                                                    <div class="input-group">
                                                         <input type="number" min="0" max="100" required="required" name="percentage" class="form-control" id="percentage">
                                                         <span class="input-group-addon">%</span>
                                                     </div>
-                                                </div>
                                             </div>
                                         </div>
-                                        <br><br>
                                         <div class="form-group">
                                             <label><input type="checkbox" name="charge_tax" id="charge_tax"> Charge
                                             Vat</label>
                                         </div>
                                         <div class="form-group">
-                                            <label for="userName">Profit Margin</label>
-                                            <div class="pull-left">
-                                                <div class="col-md-6">
-                                                    <div class="input-group" style="width:130%">
-                                                        <input type="number" min="0" max="100" required="required" name="percentage" class="form-control" id="percentage">
-                                                        <span class="input-group-addon">%</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="userName"><span id="rmv_logo" class="btn btn-xs btn-warning">Remove</span> Logo </label>
+                                            <label for="userName"><span id="rmv_logo" class="btn btn-xs btn-warning">Remove</span>Pharmacy Logo </label>
                                             <div id="current_logo"></div>
                                             <input type="file" name="imagename" id="logoname" accept=".jpg,.jpeg,.png,.webp">
                                             <small class="text-gray">
                                             Max filesize: <strong>2MB</strong>; Allowed image types:<strong> jpeg, jpg, png or webp</strong></small>
-
                                         </div>
-                                        <div class="form-group">
-                                            <label for="userName">Receipt Footer</label>
-                                            <textarea name="footer" class="form-control" id="footer"></textarea>
+                                          <div class="form-group">
+                                            <input id="save_settings" type="submit" class="btn btn-success waves-effect waves-light" value="Save Settings">
                                         </div>
+                                       
                                     </div>
                                 </div>
-                                <div class="form-group">
-                                    <input id="save_settings" type="submit" class="btn btn-success btn-block waves-effect waves-light" value="Save Settings">
-                                </div>
+                               
                             </div>
                             </form>
+                            <!-- add products file by uploading a csv file -->
+                            <div class="row" >
+                                <div class="col-md-12" >
+                                    <h4>Upload Products File</h4>
+                                    <hr>
+                                    <div class="form-group">
+                                        <label for="productsFile"><span id="rmv_img" class="btn btn-xs btn-warning">Remove</span></label>
+                                        <input type="file" name="productsFile" id="productsFile">
+                                    </div>
+                                    <button id="upload_products" type="submit" class="btn btn-primary waves-effect waves-light">Upload Products</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

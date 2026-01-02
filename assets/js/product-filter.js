@@ -1,6 +1,7 @@
 $(document).ready(function () {
   $("#categories").on("change", function () {
     let selected = $("#categories option:selected").val();
+    console.log(selected)
     if (selected == "0") {
       $("#parent > div").fadeIn(450);
     } else {
@@ -10,6 +11,7 @@ $(document).ready(function () {
   });
 
   function searchProducts() {
+    console.log($("#search").val());
     var matcher = new RegExp($("#search").val(), "gi");
     $(".box")
       .show()

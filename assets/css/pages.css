@@ -9,15 +9,15 @@
 
 #cartTable .card-body { 
   display: block; 
-  max-height: calc(100vh - 413px);
-  min-height: calc(100vh - 431px);
-  height:calc(100vh - 385px);
+  max-height: calc(100vh - 631px);
+  min-height: calc(100vh - 631px);
+  height:calc(100vh - 631px);
   overflow: auto;
 }
 
 #parent { 
   display: block; 
-  height: calc(100vh - 215px);
+  height: calc(100vh - 315px);
   overflow: auto;
 }
 

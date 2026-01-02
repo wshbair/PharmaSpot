@@ -263,7 +263,7 @@ if (auth == undefined) {
       $(".p_five").hide();
     }
 
-    function loadProducts() {
+    function loadProducts(data) {
       $.get(api + "inventory/products", function (data) {
         data.forEach((item) => {
           item.price = parseFloat(item.price).toFixed(2);
@@ -303,7 +303,6 @@ if (auth == undefined) {
         );
         }
 
-       
         $("#parent").text("");
 
         data.forEach((item) => {
@@ -322,7 +321,6 @@ if (auth == undefined) {
             item_img = checkFileExists(item_img) ? item_img : default_item_img;
           }
           
-
           let item_info = `<div class="col-lg-2 box ${item.category}"
                                 onclick="$(this).addToCart(${item._id}, ${
                                   item.quantity
@@ -359,7 +357,7 @@ if (auth == undefined) {
         $("#category,#categories").html(`<option value="0">Select</option>`);
         allCategories.forEach((category) => {
           $("#category,#categories").append(
-            `<option value="${category._id}">${category.name}</option>`,
+            `<option value="${category.name}">${category.name}</option>`,
           );
         });
       });
@@ -404,6 +402,7 @@ if (auth == undefined) {
 
     function barcodeSearch(e) {
       e.preventDefault();
+      console.log($("#skuCode").val());
       let searchBarCodeIcon = $(".search-barcode-btn").html();
       $(".search-barcode-btn").empty();
       $(".search-barcode-btn").append(
@@ -446,7 +445,7 @@ if (auth == undefined) {
               `${product.name} is expired`,
               "Ok",
             );
-          } else if (product.quantity < 1) {
+          } else if (product.quantity < 0.5) {
             notiflix.Report.info(
               "Out of stock!",
               "This item is currently unavailable",
@@ -488,66 +487,11 @@ if (auth == undefined) {
       });
     }
 
-    function productNameSearch(e) {
-      e.preventDefault();
-      console.log("Call function")
-      let searchNameIcon = $(".search-name-btn").html();
-      $(".search-name-btn").empty();
-      $(".search-name-btn").append(
-        $("<i>", { class: "fa fa-spinner fa-spin" }),
-      );
-
-      let req = {
-        productName: $("#searchProductNameValue").val(),
-      };
-      $.ajax({
-        url: api + "inventory/product/name",
-        type: "POST",
-        data: JSON.stringify(req),
-        contentType: "application/json; charset=utf-8",
-        cache: false,
-        processData: false,
-        success: function (product) {
-        console.log(product)
-        $(".search-name-btn").html(searchNameIcon);
-        $('#productNameList').empty()
-        product.forEach(u => {
-          $('#productNameList').append(
-            `<option value="${u._id}" label="${u.name}">`
-          )
-        });
-        },
-        error: function (err) {
-          console.log(err)
-          // if (err.status === 422) {
-          //   $(this).showValidationError(data);
-          //   $("#basic-addon2").append(
-          //     $("<i>", { class: "glyphicon glyphicon-remove" }),
-          //   );
-          // } else if (err.status === 404) {
-          //   $("#basic-addon2").empty();
-          //   $("#basic-addon2").append(
-          //     $("<i>", { class: "glyphicon glyphicon-remove" }),
-          //   );
-          // } else {
-          //   $(this).showServerError();
-          //   $("#basic-addon2").empty();
-          //   $("#basic-addon2").append(
-          //     $("<i>", { class: "glyphicon glyphicon-warning-sign" }),
-          //   );
-          // }
-        },
-      });
-    }
 
     $("#searchBarCode").on("submit", function (e) {
       barcodeSearch(e);
     });
     
-    $("#searchProductNameValue").on("keyup change", function (e) {
-      productNameSearch(e);
-    });
-
 
     $("body").on("click", "#jq-keyboard button", function (e) {
       let pressed = $(this)[0].className.split(" ");
@@ -594,7 +538,7 @@ if (auth == undefined) {
       let total_items = 0;
       $.each(cart, function (index, data) {
         total += data.quantity * data.price;
-        total_items += parseInt(data.quantity);
+        total_items += parseFloat(data.quantity);
       });
       $("#total").text(total_items);
       total = total - $("#inputDiscount").val();
@@ -1253,9 +1197,7 @@ if (auth == undefined) {
     });
 
     $("#confirmPayment").hide();
-
     $("#cardInfo").hide();
-
     $("#payment").on("input", function () {
       $(this).calculateChange();
     });
@@ -1388,15 +1330,51 @@ if (auth == undefined) {
       });
     });
 
+    $("#upload_products").on("click", function (e) {
+      e.preventDefault();
+      var $btn = $(this);
+      var input = $("#productsFile")[0];
+      if (!input || !input.files || input.files.length === 0) {
+        notiflix.Report.warning("No file selected", "Please choose a CSV file to upload.", "Ok");
+        return;
+      }
+      var fd = new FormData();
+      fd.append("csvfile", input.files[0]);
+      $btn.prop("disabled", true).text("Uploading...");
+      $.ajax({
+        url: api + "inventory/products/csv",
+        type: "POST",
+        data: fd,
+        processData: false,
+        contentType: false,
+        success: function (resp) {
+          $btn.prop("disabled", false).text("Upload Products");
+          $("#productsFile").val("");
+          loadProducts();
+          loadCategories();
+          notiflix.Report.success(
+            "Products Uploaded",
+            "Inserted: " + resp.inserted + ", Updated: " + resp.updated,
+            "Ok"
+          );
+        },
+        error: function (jqXHR) {
+          $btn.prop("disabled", false).text("Upload Products");
+          var message = jqXHR.responseJSON && jqXHR.responseJSON.message ? jqXHR.responseJSON.message : "Failed to upload CSV file.";
+          var errorTitle = jqXHR.responseJSON && jqXHR.responseJSON.error ? jqXHR.responseJSON.error : "Error";
+          notiflix.Report.failure(errorTitle, message, "Ok");
+        }
+      });
+    });
+
     $.fn.editProduct = function (index) {
       $("#Products").modal("hide");
-
       $("#category option")
         .filter(function () {
           return $(this).val() == allProducts[index].category;
         })
         .prop("selected", true);
-
+      console.log(allProducts[index])
       $("#productName").val(allProducts[index].name);
       $("#product_price").val(allProducts[index].price);
       $("#quantity").val(allProducts[index].quantity);
@@ -1405,6 +1383,9 @@ if (auth == undefined) {
       $("#minStock").val(allProducts[index].minStock || 1);
       $("#product_id").val(allProducts[index]._id);
       $("#img").val(allProducts[index].img);
+      $("#profit_margin").val(allProducts[index].profitMargin || 0);
+      $("#cost_price").val(allProducts[index].costPrice || 0);
+
 
       if (allProducts[index].img != "") {
         $("#imagename").hide();
@@ -1546,7 +1527,14 @@ if (auth == undefined) {
       loadCategoryList();
     });
 
-    $("#profit_margin").off("input change").on("input change", function () {
+    $("#cost_price").off("input change").on("input change", function () {
+        var price = parseFloat($("#cost_price").val()) || 0;
+        var margin = parseFloat($("#profit_margin").val()) || 0;
+        var salePrice = price + (price * margin / 100);
+        $("#product_price").val(salePrice.toFixed(2));
+      });
+
+      $("#profit_margin").off("input change").on("input change", function () {
         var price = parseFloat($("#cost_price").val()) || 0;
         var margin = parseFloat($("#profit_margin").val()) || 0;
         var salePrice = price + (price * margin / 100);
@@ -1624,9 +1612,8 @@ if (auth == undefined) {
 
       products.forEach((product, index) => {
         counter++;
-
         let category = allCategories.filter(function (category) {
-          return category._id == product.category;
+          return category.name == product.category;
         });
 
         product.stockAlert = "";
@@ -1683,16 +1670,13 @@ if (auth == undefined) {
             <td><img id="` +
           product._id +
           `"></td>
-            <td><img style="max-height: 50px; max-width: 50px; border: 1px solid #ddd;" src="${product_img}" id="product_img"></td>
             <td>${product.name}
             ${product.expiryAlert}</td>
             <td>${validator.unescape(settings.symbol)}${product.price}</td>
             <td>${product.stock == 1 ? product.quantity : "N/A"}
             ${product.stockAlert}
             </td>
-            <td>${product.expirationDate}</td>
-            <td>${category.length > 0 ? category[0].name : ""}</td>
-            <td>${product.stock == 1 ? "Yes" : "No"}</td>
+            <td>${product.category}</td>
             <td class="nobr"><span class="btn-group"><button onClick="$(this).editProduct(${index})" class="btn btn-warning btn-sm"><i class="fa fa-edit"></i></button><button onClick="$(this).deleteProduct(${
               product._id
             })" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button></span></td></tr>`;
@@ -1738,9 +1722,7 @@ if (auth == undefined) {
 
       allCategories.forEach((category, index) => {
         counter++;
-
         category_list += `<tr>
-     
             <td>${category.name}</td>
             <td><span class="btn-group"><button onClick="$(this).editCategory(${index})" class="btn btn-warning"><i class="fa fa-edit"></i></button><button onClick="$(this).deleteCategory(${category._id})" class="btn btn-danger"><i class="fa fa-trash"></i></button></span></td></tr>`;
       });
@@ -2111,14 +2093,14 @@ function loadTransactions() {
           }
 
           for (item in result) {
-            let price = 0;
-            let quantity = 0;
+            let price = 0.0;
+            let quantity = 0.0;
             let id = 0;
 
             result[item].forEach((i) => {
               id = i.id;
               price = i.price;
-              quantity = quantity + parseInt(i.quantity);
+              quantity = quantity + parseFloat(i.quantity);
             });
 
             sold.push({

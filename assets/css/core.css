@@ -12,7 +12,7 @@ body {
 html {
     position: relative;
     min-height: 100%;
-    background: #ebeff2;
+    /* background: #797979; */
 }
 
 ::-webkit-scrollbar {

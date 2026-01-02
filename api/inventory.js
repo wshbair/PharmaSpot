@@ -15,6 +15,8 @@ const validFileTypes = [
     "image/webp"];
 const maxFileSize = 2097152 //2MB = 2*1024*1024
 const validator = require("validator");
+const { random } = require("lodash");
+const { name } = require("browser-sync");
 const appName = process.env.APPNAME;
 const appData = process.env.APPDATA;
 const dbPath = path.join(
@@ -38,6 +40,19 @@ const upload = multer({
   fileFilter: filterFile,
 }).single("imagename");
 
+const csvUpload = multer({
+  storage: storage,
+  limits: { fileSize: maxFileSize },
+  fileFilter: function (req, file, cb) {
+    const allowedCsv = ["text/csv", "application/vnd.ms-excel", "application/csv"];
+    if (allowedCsv.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new multer.MulterError("LIMIT_UNEXPECTED_FILE"), false);
+    }
+  },
+}).single("csvfile");
+
 
 app.use(bodyParser.json());
 
@@ -49,6 +64,13 @@ let inventoryDB = new Datastore({
 });
 
 inventoryDB.ensureIndex({ fieldName: "_id", unique: true });
+
+let categoryDB = new Datastore({
+    filename: path.join(appData, appName, "server", "databases", "categories.db"),
+    autoload: true,
+});
+
+categoryDB.ensureIndex({ fieldName: "_id", unique: true });
 
 /**
  * GET endpoint: Get the welcome message for the Inventory API.
@@ -156,21 +178,20 @@ app.post("/product", function (req, res) {
             }
 
         }
-
     let Product = {
         _id: parseInt(validator.escape(req.body.id)),
         barcode: parseInt(validator.escape(req.body.barcode)),
         expirationDate: validator.escape(req.body.expirationDate),
         price: validator.escape(req.body.price),
         category: validator.escape(req.body.category),
-        quantity:
-            validator.escape(req.body.quantity) == ""
-                ? 0
-                : validator.escape(req.body.quantity),
+        quantity: validator.escape(req.body.quantity),
         name: validator.escape(req.body.name),
         stock: req.body.stock === "on" ? 0 : 1,
         minStock: validator.escape(req.body.minStock),
         img: image,
+        costPrice: validator.escape(req.body.cost_price),
+        profitMargin: validator.escape(req.body.profit_margin)
+        
     };
 
     if (validator.escape(req.body.id) === "") {
@@ -206,6 +227,161 @@ app.post("/product", function (req, res) {
             },
         );
     }
+    });
+});
+
+/**
+ * POST /products/csv
+ * Bulk import or update products from an uploaded CSV file.
+ * Each row in the CSV maps to a product document.
+ * If a product with the same _id already exists it will be updated, otherwise inserted.
+ * Returns a summary count of inserted and updated records.
+ */
+app.post("/products/csv", function (req, res) {
+    // Handle multipart upload via multer middleware
+    csvUpload(req, res, function (err) {
+        // Catch and respond to any multer-level upload errors
+        if (err) {
+            if (err instanceof multer.MulterError) {
+                return res.status(400).json({
+                    error: 'Upload Error',
+                    message: err.message,
+                });
+            } else {
+                return res.status(500).json({
+                    error: 'Internal Server Error',
+                    message: err.message,
+                });
+            }
+        }
+
+        // Ensure a file was actually uploaded
+        if (!req.file) {
+            return res.status(400).json({
+                error: 'Bad Request',
+                message: 'CSV file is required.',
+            });
+        }
+
+        // Build absolute path to the uploaded CSV (sanitize filename to avoid traversal)
+        let csvPath = path.join(appData, appName, "uploads", sanitizeFilename(req.file.filename));
+
+        try {
+            // Read entire CSV into memory as UTF-8 string
+            let raw = fs.readFileSync(csvPath, "utf8");
+
+            // Split into lines, trimming empty ones
+            let lines = raw.split(/\r?\n/).filter(function (l) { return l.trim() !== ""; });
+
+            // Reject if header-only or completely empty
+            if (lines.length === 0) {
+                return res.status(400).json({ error: "Bad Request", message: "Empty CSV file." });
+            }
+
+            // Extract headers from first line
+            let headers = lines[0].split(",").map(function (h) { return h.trim(); });
+
+            // Collect parsed products here
+            let products = [];
+
+            // Iterate data rows (skip header)
+            for (let i = 1; i < lines.length; i++) {
+                let cols = lines[i].split(",").map(function (c) { return c.trim(); });
+
+                // Build row object mapping header -> value
+                let row = {};
+                for (let j = 0; j < headers.length; j++) { row[headers[j]] = cols[j] || ""; }
+
+                // Sanitize image filename if provided
+                let image = "";
+                if (validator.escape(row.img) !== "") { image = sanitizeFilename(row.img); }
+
+                // Construct product document with fallback defaults
+                let p = {
+                    _id: validator.escape(row.id) === "" ? Math.floor(Date.now() / 1000) : parseInt(validator.escape(row.id)),
+                    barcode: validator.escape(row.barcode) === "" ? 0 : parseInt(validator.escape(row.barcode)),
+                    expirationDate: validator.escape(row.expirationDate),
+                    price: validator.escape(row.price),
+                    category: validator.escape(row.category),
+                    quantity: validator.escape(row.quantity) === "" ? 0 : row.quantity,
+                    name: validator.escape(row.name),
+                    stock: row.stock === "on" ? 0 : 1,
+                    minStock: validator.escape(row.minStock),
+                    img: image,
+                    profitMargin: validator.escape(row.profitMargin),
+                    costPrice: validator.escape(row.costPrice),
+                };
+                products.push(p);
+            }
+
+            // Counters for summary response
+            let inserted = 0;
+            let updated = 0;
+
+            // Process products sequentially to avoid duplicate key races
+            async.eachSeries(products, function (p, cb) {
+                function proceed() {
+                    inventoryDB.findOne({ _id: parseInt(p._id) }, function (e, existing) {
+                        if (existing) {
+                            inventoryDB.update({ _id: parseInt(p._id) }, p, {}, function (e2) {
+                                if (!e2) { updated++; }
+                                cb();
+                            });
+                        } else {
+                            inventoryDB.insert(p, function (e3) {
+                                if (!e3) { inserted++; }
+                                cb();
+                            });
+                        }
+                    });
+                }
+
+                let catName = validator.escape(p.category);
+                if (catName === undefined || catName === null || catName === "") {
+                    p.category = "other";
+                    return proceed();
+                }
+
+                let catId = random(1000000, 9999999);
+                if (!isNaN(catId)) {
+                    categoryDB.findOne({ name: catName }, function (ce, existingCat) {
+                        if (existingCat) {
+                            p.category = existingCat.name;
+                            proceed();
+                        } else {
+                            categoryDB.insert({ id: catId, name: catName}, function () {
+                                p.category = catName;
+                                proceed();
+                            });
+                        }
+                    });
+                } else {
+                    let name = validator.escape(catName);
+                    categoryDB.findOne({ name: name }, function (ce, existingCat) {
+                        if (existingCat) {
+                            p.category = existingCat.name;
+                            proceed();
+                        } else {
+                            let id = Math.floor(Date.now() / 1000)
+                            let newCat = { id: id, name: name };
+                            categoryDB.insert(newCat, function () {
+                                p.category = newCat.name;
+                                proceed();
+                            });
+                        }
+                    });
+                }
+            }, function (finalErr) {
+                if (finalErr) {
+                    return res.status(500).json({ error: "Internal Server Error", message: "An unexpected error occurred." });
+                } else {
+                    return res.status(200).json({ inserted: inserted, updated: updated });
+                }
+            });
+        } catch (e) {
+            // Catch file read or parsing exceptions
+            return res.status(500).json({ error: "Internal Server Error", message: "An unexpected error occurred." });
+        }
     });
 });
 
