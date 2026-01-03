@@ -15,8 +15,6 @@ const validFileTypes = [
     "image/webp"];
 const maxFileSize = 2097152 //2MB = 2*1024*1024
 const validator = require("validator");
-const { random } = require("lodash");
-const { name } = require("browser-sync");
 const appName = process.env.APPNAME;
 const appData = process.env.APPDATA;
 const dbPath = path.join(
