@@ -27,6 +27,7 @@ const dbPath = path.join(
     "inventory.db",
 );
 
+
 const storage = multer.diskStorage({
     destination: path.join(appData, appName, "uploads"),
     filename: function (req, file, callback) {
@@ -64,13 +65,6 @@ let inventoryDB = new Datastore({
 });
 
 inventoryDB.ensureIndex({ fieldName: "_id", unique: true });
-
-let categoryDB = new Datastore({
-    filename: path.join(appData, appName, "server", "databases", "categories.db"),
-    autoload: true,
-});
-
-categoryDB.ensureIndex({ fieldName: "_id", unique: true });
 
 /**
  * GET endpoint: Get the welcome message for the Inventory API.
@@ -313,7 +307,6 @@ app.post("/products/csv", function (req, res) {
                 };
                 products.push(p);
             }
-
             // Counters for summary response
             let inserted = 0;
             let updated = 0;
@@ -341,36 +334,38 @@ app.post("/products/csv", function (req, res) {
                     p.category = "other";
                     return proceed();
                 }
+                else
+                    return proceed()
 
-                let catId = random(1000000, 9999999);
-                if (!isNaN(catId)) {
-                    categoryDB.findOne({ name: catName }, function (ce, existingCat) {
-                        if (existingCat) {
-                            p.category = existingCat.name;
-                            proceed();
-                        } else {
-                            categoryDB.insert({ id: catId, name: catName}, function () {
-                                p.category = catName;
-                                proceed();
-                            });
-                        }
-                    });
-                } else {
-                    let name = validator.escape(catName);
-                    categoryDB.findOne({ name: name }, function (ce, existingCat) {
-                        if (existingCat) {
-                            p.category = existingCat.name;
-                            proceed();
-                        } else {
-                            let id = Math.floor(Date.now() / 1000)
-                            let newCat = { id: id, name: name };
-                            categoryDB.insert(newCat, function () {
-                                p.category = newCat.name;
-                                proceed();
-                            });
-                        }
-                    });
-                }
+                // let catId = random(1000000, 9999999);
+                // if (!isNaN(catId)) {
+                //     categoryDB.findOne({ name: catName }, function (ce, existingCat) {
+                //         if (existingCat) {
+                //             p.category = existingCat.name;
+                //             proceed();
+                //         } else {
+                //             categoryDB.insert({ id: catId, name: catName}, function () {
+                //                 p.category = catName;
+                //                 proceed();
+                //             });
+                //         }
+                //     });
+                // } else {
+                //     let name = validator.escape(catName);
+                //     categoryDB.findOne({ name: name }, function (ce, existingCat) {
+                //         if (existingCat) {
+                //             p.category = existingCat.name;
+                //             proceed();
+                //         } else {
+                //             let id = Math.floor(Date.now() / 1000)
+                //             let newCat = { id: id, name: name };
+                //             categoryDB.insert(newCat, function () {
+                //                 p.category = newCat.name;
+                //                 proceed();
+                //             });
+                //         }
+                //     });
+                // }
             }, function (finalErr) {
                 if (finalErr) {
                     return res.status(500).json({ error: "Internal Server Error", message: "An unexpected error occurred." });

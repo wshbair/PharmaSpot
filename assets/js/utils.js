@@ -98,6 +98,21 @@ const setContentSecurityPolicy = () => {
   document.head.appendChild(metaTag);
 };
 
+const extractCategories = (text) => {
+  const rows = text.split(/\r?\n/).filter(r => r.trim().length);
+  if (rows.length === 0) return [];
+  const header = rows[0].split(",").map(h => h.trim().toLowerCase());
+  const colIndex = header.indexOf("category");
+  if (colIndex === -1) return [];
+  return rows.slice(1)
+    .map(r => r.split(",")[colIndex])
+    .filter(v => v !== undefined && v !== "");
+}
+
+const extractUniqueCategories = (csvFile) => {
+  const all = extractCategories(csvFile);
+  return Array.from(new Set(all));
+}
 module.exports = {
   DATE_FORMAT,
   moneyFormat,
@@ -107,5 +122,6 @@ module.exports = {
   daysToExpire,
   checkFileExists,
   checkFileType,
-  setContentSecurityPolicy
+  setContentSecurityPolicy,
+  extractUniqueCategories
 };

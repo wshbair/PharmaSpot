@@ -16,6 +16,8 @@ let dotInterval = setInterval(function () {
 let Store = require("electron-store");
 const remote = require("@electron/remote");
 const app = remote.app;
+const utils = require("./utils");
+
 let cart = [];
 let index = 0;
 let allUsers = [];
@@ -1365,6 +1367,33 @@ if (auth == undefined) {
           notiflix.Report.failure(errorTitle, message, "Ok");
         }
       });
+      // create categories in batch
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const csvText = e.target.result;
+        const categoriesList = utils.extractUniqueCategories(csvText);
+        console.log(categoriesList);
+        $.ajax({
+          url: api + "categories/category/batch",
+          type: "POST",
+          data: JSON.stringify(categoriesList),
+          contentType: "application/json",
+          success: function (resp) {
+            loadCategories();
+            notiflix.Report.success(
+              "Categories Uploaded",
+              "Inserted: " + resp.inserted + ", Updated: " + resp.updated,
+              "Ok"
+            );
+          },
+          error: function (jqXHR) {
+            var message = jqXHR.responseJSON && jqXHR.responseJSON.message ? jqXHR.responseJSON.message : "Failed to upload categories.";
+            var errorTitle = jqXHR.responseJSON && jqXHR.responseJSON.error ? jqXHR.responseJSON.error : "Error";
+            notiflix.Report.failure(errorTitle, message, "Ok");
+          }
+        });
+      };
+      reader.readAsText(input.files[0]);
     });
 
     $.fn.editProduct = function (index) {

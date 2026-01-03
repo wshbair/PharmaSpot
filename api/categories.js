@@ -2,7 +2,6 @@ const app = require("express")();
 const server = require("http").Server(app);
 const bodyParser = require("body-parser");
 const Datastore =  require('@seald-io/nedb');
-const async = require("async");
 const path = require("path");
 const appName = process.env.APPNAME;
 const appData = process.env.APPDATA;
@@ -13,6 +12,7 @@ const dbPath = path.join(
     "databases",
     "categories.db",
 );
+
 
 app.use(bodyParser.json());
 
@@ -49,6 +49,17 @@ app.get("/all", function (req, res) {
     });
 });
 
+app.get("/category/:name", function (req, res) {
+    categoryDB.find(
+        {
+            name: req.params.name,
+        },
+        function (err, docs) {
+            res.send(docs);
+        },
+    );
+});
+
 /**
  * POST endpoint: Create a new category.
  *
@@ -58,7 +69,7 @@ app.get("/all", function (req, res) {
  */
 app.post("/category", function (req, res) {
     let newCategory = req.body;
-    newCategory._id = Math.floor(Date.now() / 1000);
+    newCategory.id = Math.floor(Date.now() / 1000);
     categoryDB.insert(newCategory, function (err, category) {
             if (err) {
                     console.error(err);
@@ -68,6 +79,36 @@ app.post("/category", function (req, res) {
                     });
                 }
         else{res.sendStatus(200);}
+    });
+});
+
+app.post("/category/batch", function (req, res) {
+    let categories = req.body;
+    if (!Array.isArray(categories) || categories.length === 0) {
+        return res.status(400).json({
+            error: "Bad Request",
+            message: "Provide an array of categories.",
+        });
+    }
+
+    categories = categories.map(function (cat, i) {
+        let c = {
+            id: Math.floor(Date.now() / 1000) + i, 
+            _id: Math.floor(Date.now() / 1000) + i,
+            name: cat};
+        return c;
+    });
+
+    categoryDB.insert(categories, function (err, newDocs) {
+        if (err) {
+            console.error(err);
+            res.status(500).json({
+                error: "Internal Server Error",
+                message: "An unexpected error occurred.",
+            });
+        } else {
+            res.sendStatus(200);
+        }
     });
 });
 
